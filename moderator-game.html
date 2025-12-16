@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Научный News TG — Модератор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    .app { max-width: 960px; margin: 0 auto; padding: 12px; }
+    header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #111827;
+    }
+    header h1 { margin: 0 0 4px 0; font-size: 22px; color: #fff; }
+    header .tagline { font-size: 13px; color: #9ca3af; }
+    header small { font-size: 11px; color: #6b7280; text-align: right; }
+
+    .card {
+      background: #111827; border-radius: 14px; padding: 14px; margin-bottom: 10px;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.85);
+    }
+    .card h2 { margin: 0 0 8px 0; font-size: 17px; color: #fff; }
+    .card p { margin: 4px 0; font-size: 14px; }
+
+    .btn {
+      border: none; cursor: pointer; border-radius: 999px;
+      padding: 9px 14px; font-size: 14px; font-weight: 500;
+      transition: all .15s;
+    }
+    .btn-primary { background:#2f81f7; color:#fff; }
+    .btn-ghost   { background:transparent; border:1px solid #374151; color:#e5e7eb; }
+    .btn-secondary { background:#020617; border:1px solid #1f2937; color:#e5e7eb; }
+    .btn-full { width:100%; text-align:center; }
+    .btn:hover { opacity:.9; transform:translateY(-1px); }
+    .btn.correct { background:#10b981; border-color:#10b981; color:#fff; }
+    .btn.wrong   { background:#ef4444; border-color:#ef4444; color:#fff; }
+
+    .screen { display:none; }
+    .screen.active { display:block; }
+
+    .menu-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:8px 0; border-bottom:1px solid #1f2937; cursor:pointer;
+    }
+    .menu-item:last-child { border-bottom:none; }
+    .menu-item span { font-size:15px; }
+    .menu-item small { display:block; color:#6b7280; font-size:12px; }
+    .arrow { color:#6b7280; font-size:18px; }
+
+    .top-bar {
+      display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; font-size:13px;
+    }
+    .top-pill {
+      padding:4px 10px; border-radius:999px;
+      background:#020617; border:1px solid #1f2937; color:#9ca3af;
+    }
+
+    .back-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      cursor:pointer; color:#3b82f6; font-size:13px;
+      margin:4px 0 8px 0;
+    }
+
+    .news-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .avatar {
+      width:34px; height:34px; border-radius:999px;
+      background:linear-gradient(135deg,#1d4ed8,#2563eb);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:600; font-size:16px;
+    }
+    .news-meta { font-size:12px; color:#9ca3af; }
+    .channel-name { font-size:14px; font-weight:600; }
+
+    .news-title { font-size:15px; font-weight:600; margin:4px 0; color:#e5e7eb; }
+    .news-body  { font-size:14px; color:#d1d5db; margin:4px 0; }
+    .tags { margin-top:4px; }
+    .pill {
+      display:inline-block; padding:2px 8px; font-size:11px;
+      border-radius:999px; background:#020617; border:1px solid #1f2937;
+      color:#9ca3af; margin-right:4px; margin-bottom:2px;
+    }
+
+    .choice-row { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .choice-btn {
+      flex:1; min-width:150px; padding:7px 10px;
+      border-radius:999px; border:1px solid #374151; background:#020617;
+      color:#e5e7eb; font-size:13px; cursor:pointer; text-align:left;
+      display:flex; align-items:center; gap:6px;
+    }
+    .choice-btn.active { border-color:#3b82f6; background:#1d4ed8; }
+
+    .moderation-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+
+    .result-badge {
+      margin-top:8px; font-size:13px; padding:8px 10px;
+      border-radius:10px; background:#020617; border:1px solid #1f2937;
+    }
+
+    .stats-row {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:6px; margin-top:8px; font-size:12px;
+    }
+    .stat-box {
+      background:#020617; border-radius:8px; padding:8px;
+      text-align:center;
+    }
+    .stat-label { color:#9ca3af; }
+    .stat-value { font-size:15px; font-weight:600; color:#fff; }
+
+    .modal {
+      position:fixed; inset:0; background:rgba(15,23,42,0.9);
+      display:none; align-items:center; justify-content:center;
+      z-index:50;
+    }
+    .modal-inner {
+      background:#020617; border-radius:16px; padding:14px;
+      max-width:340px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    }
+
+    .block-row { margin-top:6px; }
+    .block-chip {
+      display:inline-flex; align-items:center;
+      padding:6px 10px; margin:3px 0; border-radius:10px;
+      background:#020617; border:1px solid #1f2937;
+      font-size:13px; cursor:pointer; width:100%; text-align:left;
+    }
+    .block-chip.active { background:#16a34a33; border-color:#16a34a; }
+
+    .badge {
+      display:inline-block; padding:3px 9px; border-radius:999px;
+      background:#1d4ed8; color:#fff; font-size:11px;
+      text-transform:uppercase; letter-spacing:0.05em;
+      margin-bottom:4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ГЛАВНОЕ МЕНЮ -->
+  <div id="screen-menu" class="screen active">
+    <header>
+      <div>
+        <h1>🔬 Научный News TG</h1>
+        <div class="tagline">Ты — модератор канала. Отбирай настоящие научные новости.</div>
+      </div>
+      <small>Разработчик:<br>Зверев Григорий<br>10 л</small>
+    </header>
+
+    <div class="card">
+      <h2>🎮 Режимы</h2>
+      <div class="menu-item" onclick="startModeratorMode()">
+        <span>🔍 Модерировать ленту<small>Решай, блокировать новость или оставить</small></span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="startBuilderMode()">
+        <span>🧱 Собрать честный пост<small>Убери кликбейт, оставь только науку</small></span>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💰 Твой кошелёк</h2>
+      <div class="top-bar">
+        <div class="top-pill">Коины: <b id="coins">0</b></div>
+        <div class="top-pill">Ранг: <b id="rank">Новичок</b></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Проверено новостей</div>
+          <div class="stat-value" id="total-reviewed">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Фейки заблокированы</div>
+          <div class="stat-value" id="blocked-correct">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Наука удалена зря</div>
+          <div class="stat-value" id="blocked-wrong">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📈 Прогресс</h2>
+      <p style="font-size:13px;color:#9ca3af;">Статистика хранится только на этом устройстве.</p>
+      <p style="font-size:14px;">
+        Точность модерации: <b id="mod-accuracy">0%</b><br>
+        Собрано честных постов: <b id="builder-count">0</b><br>
+        Средняя «научность» постов: <b id="builder-avg">0%</b>
+      </p>
+    </div>
+  </div>
+
+  <!-- ИГРА 1: МОДЕРАТОР -->
+  <div id="screen-moderator" class="screen">
+    <div class="back-btn" onclick="showScreen('menu')">← В меню</div>
+
+    <div class="card">
+      <div class="top-bar">
+        <span class="top-pill">Режим модератора</span>
+        <span class="top-pill">Новость: <span id="round-num">1</span>/10</span>
+        <span class="top-pill">Коины: <b id="coins-top">0</b></span>
+      </div>
+      <p style="font-size:13px;color:#9ca3af;margin-top:2px;">
+        Выбирай тип новости и решай: заблокировать её или оставить подписчикам.
+      </p>
+
+      <div id="moderator-news"></div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Фейки заблокированы</div>
+          <div class="stat-value" id="round-blocked-correct">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Наука удалена зря</div>
+          <div class="stat-value" id="round-blocked-wrong">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Точность раунда</div>
+          <div class="stat-value" id="round-accuracy">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ИГРА 2: ЧЕСТНЫЙ ПОСТ -->
+  <div id="screen-builder" class="screen">
+    <div class="back-btn" onclick="showScreen('menu')">← В меню</div>
+
+    <div class="card">
+      <h2>🧱 Собрать честный пост</h2>
+      <p style="font-size:13px;color:#9ca3af;">
+        Отметь фразы, которые подходят для честной научной новости. Остальное — лишний кликбейт.
+      </p>
+
+      <div class="news-title" id="builder-title"></div>
+      <div class="news-body" id="builder-body"></div>
+
+      <p style="font-size:13px;margin-top:8px;">Фразы для выбора:</p>
+      <div id="builder-blocks" class="block-row"></div>
+
+      <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="checkBuilder()">Проверить пост</button>
+      <div id="builder-result" class="result-badge" style="display:none;margin-top:8px;"></div>
+
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn btn-ghost" style="flex:1;" onclick="showScreen('menu')">← В меню</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="nextBuilder()">Новый пост</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА ИТОГОВ -->
+  <div id="modal-summary" class="modal">
+    <div class="modal-inner">
+      <h2 style="margin:0 0 6px 0;font-size:17px;">✅ Раунд завершён</h2>
+      <p id="summary-text" style="font-size:14px;margin:4px 0;"></p>
+      <p style="font-size:12px;color:#9ca3af;margin:4px 0 10px 0;">
+        Коины уже добавлены в твой кошелёк.
+      </p>
+      <button class="btn btn-primary btn-full" onclick="closeSummary()">Понятно</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // --- ДАННЫЕ НОВОСТЕЙ (РФ) ---
+  const MOD_NEWS = [
+    {
+      title: "Учёные МГУ и МФТИ создали новый материал для хранения энергии",
+      body: "Физики МГУ имени Ломоносова совместно с исследователями МФТИ разработали органический материал, способный накапливать энергию солнечного света. Статья опубликована в журнале Nature Energy, описана методика эксперимента и ограничения работы.",
+      emoji: "☀️",
+      topic: "physics",
+      truth: "scientific",
+      bestAction: "leave",
+      explanationGood: "✅ Ты оставил в ленте реальную научную новость с ссылкой на авторитетный журнал и описанием методики.",
+      explanationBad: "⚠️ Это была настоящая научная публикация. Указаны МГУ, МФТИ, журнал и детали исследования — блокировать такое не нужно."
+    },
+    {
+      title: "Чудо-капли от простуды обещают 100% защиту за 3 дня",
+      body: "Компания без названия продаёт капли, которые якобы полностью защищают от простуды. В описании только фраза «учёные доказали эффективность», нет ни имён, ни институтов, ни ссылок на журналы. В конце большая кнопка «Купить со скидкой 80%».",
+      emoji: "💊",
+      topic: "medicine",
+      truth: "fake",
+      bestAction: "block",
+      explanationGood: "✅ Отлично! Ты заблокировал типичный рекламный фейк: громкие обещания, 100% эффективность и ноль научных данных.",
+      explanationBad: "⚠️ Эту новость нужно блокировать: нет ни одного научного источника, только реклама и нереальные обещания."
+    },
+    {
+      title: "Физики РАН сообщили о прототипе 50-кубитного квантового компьютера",
+      body: "Учёные Физического института РАН и Российского квантового центра представили прототип квантового компьютера. Работа пока размещена только на препринт-сервере arXiv и проходит рецензирование.",
+      emoji: "⚛️",
+      topic: "physics",
+      truth: "uncertain",
+      bestAction: "leave",
+      explanationGood: "✅ Ты аккуратно отнёсся к новости: работа реального института, но на ранней стадии. Важно наблюдать, а не кричать «фейк».",
+      explanationBad: "⚠️ Это не фейк и не готовый факт. Лучше оставить новость, но помнить, что препринт ещё проходит проверку."
+    },
+    {
+      title: "Блогер обещает похудеть на 30 кг за месяц без диет и спорта",
+      body: "Популярный блогер рекламирует марафон «−30 кг за 30 дней». Он ссылается на «секретные исследования», но не даёт ни одной ссылки или фамилии. В конце — оплата участия.",
+      emoji: "🍽️",
+      topic: "medicine",
+      truth: "fake",
+      bestAction: "block",
+      explanationGood: "✅ Правильно, это опасный фейк. Нереальный результат, отсутствие источников и продажа курса — всё как в классической псевдонауке.",
+      explanationBad: "⚠️ Такую рекламу нужно блокировать: она вредна для здоровья и не имеет научных оснований."
+    },
+    {
+      title: "Биологи СО РАН нашли новый вид бактерий в вечной мерзлоте",
+      body: "Экспедиция Сибирского отделения РАН обнаружила в вечной мерзлоте Якутии новый вид микроорганизмов. Находка описана в журнале Applied and Environmental Microbiology, указаны условия отбора проб и методы анализа.",
+      emoji: "🧬",
+      topic: "biology",
+      truth: "scientific",
+      bestAction: "leave",
+      explanationGood: "✅ Ты правильно оставил новость: указаны СО РАН, журнал и подробности исследования.",
+      explanationBad: "⚠️ Это пример настоящей научной новости — блокировать её нельзя, иначе подписчики останутся без настоящей науки."
+    },
+    {
+      title: "Неизвестный «институт» предсказывает конец света в 2030 году",
+      body: "Сайт без адреса и контактов публикует «исследование», где говорится о скором конце света. Нет ни одного графика, ни ссылки на реальные институты. В конце просьба «делиться новостью, пока её не удалили».",
+      emoji: "🌋",
+      topic: "biology",
+      truth: "fake",
+      bestAction: "block",
+      explanationGood: "✅ Ты защитил канал от паники. Это классический пример страшилки без науки и без источников.",
+      explanationBad: "⚠️ Такую страшилку нужно блокировать: она давит на эмоции и не содержит ни одного проверяемого факта."
+    },
+    {
+      title: "Инженеры Сколтеха удешевили производство водорода",
+      body: "Исследователи Сколковского института науки и технологий разработали новый катализатор для электролиза воды. По данным статьи в Nature Catalysis, себестоимость водорода снижена в несколько раз.",
+      emoji: "⚡",
+      topic: "physics",
+      truth: "scientific",
+      bestAction: "leave",
+      explanationGood: "✅ Отличное решение — оставить. Есть Сколтех, журнал и конкретный результат, это пример настоящей прикладной науки.",
+      explanationBad: "⚠️ Это хорошая научная новость с реальными данными. Её не нужно блокировать."
+    },
+    {
+      title: "Чай от космонавта лечит все болезни и продлевает жизнь",
+      body: "Неизвестная фирма продаёт «космический чай», якобы разработанный совместно с космонавтами. Сам космонавт отрицает участие, научных публикаций нет, только отзывы на сайте магазина.",
+      emoji: "☕",
+      topic: "medicine",
+      truth: "fake",
+      bestAction: "block",
+      explanationGood: "✅ Ты правильно заблокировал рекламный фейк с использованием имени космонавта без доказательств и исследований.",
+      explanationBad: "⚠️ Эта новость — реклама под видом науки. У неё нет источников, её место в блоке."
+    },
+    {
+      title: "Генетики МГУ секвенировали геном редкой бактерии с Камчатки",
+      body: "Учёные биологического факультета МГУ расшифровали полную последовательность ДНК бактерии, обитающей в горячих источниках Камчатки. Работа опубликована в Genome Biology, данные выложены в открытый доступ.",
+      emoji: "🧪",
+      topic: "biology",
+      truth: "scientific",
+      bestAction: "leave",
+      explanationGood: "✅ Ты сохранил научную новость в ленте. Есть МГУ, журнал и открытые данные — всё как надо.",
+      explanationBad: "⚠️ Это хороший пример честной научной новости. Блокировать её не стоило."
+    },
+    {
+      title: "Некий «центр исследований» заявляет, что вакцина вреднее вируса",
+      body: "В анонимном телеграм-канале публикуют «отчёт центра исследований», где говорится, что вакцина якобы опаснее заболевания. Нет ни авторов, ни ссылок, ни статистики. Канал продаёт «натуральные» альтернативы.",
+      emoji: "🦠",
+      topic: "medicine",
+      truth: "fake",
+      bestAction: "block",
+      explanationGood: "✅ Ты правильно заблокировал опасную дезинформацию о вакцинации.",
+      explanationBad: "⚠️ Эта новость — серьёзный фейк без данных и авторов. Её нужно блокировать, чтобы не вредить людям."
+    }
+  ];
+
+  // --- ДАННЫЕ ДЛЯ ИГРЫ "ЧЕСТНЫЙ ПОСТ" ---
+  const BUILDER_POSTS = [
+    {
+      title: "Новый препарат против гриппа",
+      base: "В интернете появилась новость о российском препарате против гриппа.",
+      blocks: [
+        { text: "Учёные НИЦ имени Гамалеи провели клинические испытания на 120 добровольцах.", good: true },
+        { text: "В рекламе обещают, что он лечит вообще все болезни.", good: false },
+        { text: "Результаты опубликованы в рецензируемом журнале по инфекционным заболеваниям.", good: true },
+        { text: "Производитель пишет, что врачи скрывали это средство от людей.", good: false },
+        { text: "В статье честно указано, что нужны дополнительные исследования.", good: true }
+      ]
+    },
+    {
+      title: "Диета от блогера",
+      base: "Блогер из соцсетей рассказал о своей новой диете.",
+      blocks: [
+        { text: "Он обещает минус 20 килограммов за две недели без спорта.", good: false },
+        { text: "В описании нет ни одной ссылки на научные статьи.", good: false },
+        { text: "Врачи-диетологи из НМИЦ питания объяснили, что безопасное снижение веса — 2–4 кг в месяц.", good: true },
+        { text: "Роспотребнадзор напомнил, что реклама чудо-средств должна иметь доказательства.", good: true },
+        { text: "Блогер продаёт платный марафон без лицензии и медицинского образования.", good: false }
+      ]
+    }
+  ];
+
+  // --- СОСТОЯНИЕ И СТАТИСТИКА ---
+  let state = {
+    coins: 0,
+    totalReviewed: 0,
+    blockedCorrect: 0,
+    blockedWrong: 0,
+    totalBuilder: 0,
+    sumBuilderScore: 0
+  };
+
+  let currentRoundIndex = 0;
+  let currentNewsIndex = 0;
+  let currentChoiceType = null;
+  let currentAction = null;
+  let currentBuilderIndex = 0;
+  let activeBuilder = null;
+
+  // Загрузка статистики
+  function loadStats() {
+    const saved = localStorage.getItem('moderatorStats');
+    if (saved) {
+      state = JSON.parse(saved);
+    }
+    updateHeaderStats();
+  }
+
+  function saveStats() {
+    localStorage.setItem('moderatorStats', JSON.stringify(state));
+  }
+
+  function rankByAccuracy(acc) {
+    if (acc >= 90 && state.totalReviewed >= 20) return "Главный редактор";
+    if (acc >= 75 && state.totalReviewed >= 10) return "Проверенный модератор";
+    if (acc >= 50) return "Юный факт-чекер";
+    return "Новичок";
+  }
+
+  function updateHeaderStats() {
+    const acc = state.totalReviewed ? Math.round((state.blockedCorrect) / state.totalReviewed * 100) : 0;
+    document.getElementById('coins').textContent = state.coins;
+    document.getElementById('coins-top').textContent = state.coins;
+    document.getElementById('total-reviewed').textContent = state.totalReviewed;
+    document.getElementById('blocked-correct').textContent = state.blockedCorrect;
+    document.getElementById('blocked-wrong').textContent = state.blockedWrong;
+    document.getElementById('mod-accuracy').textContent = acc + "%";
+    document.getElementById('rank').textContent = rankByAccuracy(acc);
+    document.getElementById('builder-count').textContent = state.totalBuilder;
+    const avgB = state.totalBuilder ? Math.round(state.sumBuilderScore / state.totalBuilder) : 0;
+    document.getElementById('builder-avg').textContent = avgB + "%";
+  }
+
+  // --- ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ---
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // --- МОДЕРАТОРСКИЙ РЕЖИМ ---
+  function startModeratorMode() {
+    currentRoundIndex = 0;
+    currentNewsIndex = 0;
+    stateRoundCorrectBlock = 0;
+    stateRoundWrongBlock = 0;
+    document.getElementById('round-blocked-correct').textContent = "0";
+    document.getElementById('round-blocked-wrong').textContent = "0";
+    document.getElementById('round-accuracy').textContent = "0%";
+    document.getElementById('round-num').textContent = "1";
+    showScreen('moderator');
+    renderModerationNews();
+  }
+
+  let stateRoundCorrectBlock = 0;
+  let stateRoundWrongBlock = 0;
+
+  function pickNewsForRound(index) {
+    return MOD_NEWS[index % MOD_NEWS.length];
+  }
+
+  function renderModerationNews() {
+    const news = pickNewsForRound(currentRoundIndex);
+    currentNewsIndex = currentRoundIndex;
+    currentChoiceType = null;
+    currentAction = null;
+
+    const container = document.getElementById('moderator-news');
+    const time = `${String(10 + currentRoundIndex).padStart(2,'0')}:${String(5 + currentRoundIndex*3).padStart(2,'0')}`;
+
+    container.innerHTML = `
+      <div class="news-header">
+        <div class="avatar">${news.emoji}</div>
+        <div>
+          <div class="channel-name">Научный News 🇷🇺</div>
+          <div class="news-meta">Сегодня в ${time}</div>
+        </div>
+      </div>
+      <div class="news-title">${news.title}</div>
+      <div class="news-body">${news.body}</div>
+      <div class="tags">
+        <span class="pill">#${news.topic}</span>
+        <span class="pill">#Россия</span>
+      </div>
+
+      <p style="font-size:13px;margin-top:8px;">Как ты считаешь, какая это новость?</p>
+
+      <div class="choice-row">
+        <button class="choice-btn" data-type="scientific" onclick="selectType(this,'scientific')">🧪 Научная новость</button>
+        <button class="choice-btn" data-type="fake" onclick="selectType(this,'fake')">🚫 Псевдонаучный фейк</button>
+        <button class="choice-btn" data-type="uncertain" onclick="selectType(this,'uncertain')">🤔 Спорная, надо наблюдать</button>
+      </div>
+
+      <p style="font-size:13px;margin-top:4px;">Что сделаешь как модератор?</p>
+
+      <div class="moderation-row">
+        <button class="btn btn-secondary" style="flex:1;" onclick="takeAction('block')">🚫 Заблокировать новость</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="takeAction('leave')">✅ Оставить в ленте</button>
+      </div>
+
+      <div id="moderator-result" class="result-badge" style="display:none;"></div>
+    `;
+  }
+
+  function selectType(btn, type) {
+    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChoiceType = type;
+  }
+
+  function takeAction(action) {
+    if (!currentChoiceType) {
+      alert("Сначала выбери, какая это новость: научная, фейк или спорная.");
+      return;
+    }
+    if (currentAction) return;
+
+    currentAction = action;
+    const news = pickNewsForRound(currentRoundIndex);
+    const resEl = document.getElementById('moderator-result');
+
+    let coinsEarned = 0;
+    let msg = "";
+
+    if (news.truth === "fake" && action === "block") {
+      state.blockedCorrect++;
+      stateRoundCorrectBlock++;
+      coinsEarned = 10;
+      msg = news.explanationGood + " (+10 коинов)";
+    } else if (news.truth === "scientific" && action === "block") {
+      state.blockedWrong++;
+      stateRoundWrongBlock++;
+      coinsEarned = 0;
+      msg = news.explanationBad;
+    } else if (news.truth === "scientific" && action === "leave") {
+      coinsEarned = 8;
+      msg = news.explanationGood + " (+8 коинов)";
+    } else if (news.truth === "fake" && action === "leave") {
+      coinsEarned = 0;
+      msg = news.explanationBad;
+    } else if (news.truth === "uncertain") {
+      coinsEarned = 6;
+      msg = "🤔 Осторожная работа со спорными новостями. (+6 коинов) " + news.explanationGood;
+    }
+
+    state.coins += coinsEarned;
+    state.totalReviewed++;
+    saveStats();
+    updateHeaderStats();
+
+    document.getElementById('coins-top').textContent = state.coins;
+    document.getElementById('round-blocked-correct').textContent = stateRoundCorrectBlock;
+    document.getElementById('round-blocked-wrong').textContent = stateRoundWrongBlock;
+    const roundAcc = (stateRoundCorrectBlock + stateRoundWrongBlock) ?
+      Math.round(stateRoundCorrectBlock / (stateRoundCorrectBlock + stateRoundWrongBlock) * 100) : 0;
+    document.getElementById('round-accuracy').textContent = roundAcc + "%";
+
+    resEl.style.display = "block";
+    resEl.innerHTML = msg;
+
+    setTimeout(nextModerationStep, 1400);
+  }
+
+  function nextModerationStep() {
+    currentRoundIndex++;
+    if (currentRoundIndex >= 10) {
+      const roundAcc = (stateRoundCorrectBlock + stateRoundWrongBlock) ?
+        Math.round(stateRoundCorrectBlock / (stateRoundCorrectBlock + stateRoundWrongBlock) * 100) : 0;
+      const text =
+        `Ты проверил 10 новостей.\n\n` +
+        `Правильно заблокировал фейков: ${stateRoundCorrectBlock}\n` +
+        `Ошибочно убрал научных новостей: ${stateRoundWrongBlock}\n` +
+        `Точность модерации в этом раунде: ${roundAcc}%\n\n` +
+        `За раунд получил коины и поднялся в рейтинге!`;
+
+      document.getElementById('summary-text').innerText = text;
+      document.getElementById('modal-summary').style.display = "flex";
+    } else {
+      document.getElementById('round-num').textContent = currentRoundIndex + 1;
+      renderModerationNews();
+    }
+  }
+
+  function closeSummary() {
+    document.getElementById('modal-summary').style.display = "none";
+    showScreen('menu');
+  }
+
+  // --- ИГРА 2: ЧЕСТНЫЙ ПОСТ ---
+  function startBuilderMode() {
+    currentBuilderIndex = 0;
+    loadBuilderPost();
+    showScreen('builder');
+  }
+
+  function loadBuilderPost() {
+    activeBuilder = BUILDER_POSTS[currentBuilderIndex % BUILDER_POSTS.length];
+    document.getElementById('builder-title').textContent = activeBuilder.title;
+    document.getElementById('builder-body').textContent = activeBuilder.base;
+
+    const container = document.getElementById('builder-blocks');
+    container.innerHTML = "";
+    activeBuilder.blocks.forEach((b, i) => {
+      const div = document.createElement('div');
+      div.className = "block-chip";
+      div.dataset.index = i;
+      div.onclick = () => div.classList.toggle('active');
+      div.textContent = b.text;
+      container.appendChild(div);
+    });
+    document.getElementById('builder-result').style.display = "none";
+  }
+
+  function checkBuilder() {
+    if (!activeBuilder) return;
+    const chips = document.querySelectorAll('.block-chip');
+    let goodTotal = 0, goodSelected = 0, badSelected = 0;
+
+    activeBuilder.blocks.forEach((b, i) => {
+      if (b.good) goodTotal++;
+      const chip = chips[i];
+      const selected = chip.classList.contains('active');
+      if (b.good && selected) goodSelected++;
+      if (!b.good && selected) badSelected++;
+    });
+
+    let score = 0;
+    if (goodTotal > 0) {
+      score = Math.round((goodSelected / goodTotal) * 100);
+      if (badSelected > 0) {
+        score -= badSelected * 10;
+      }
+      if (score < 0) score = 0;
+    }
+
+    state.totalBuilder++;
+    state.sumBuilderScore += score;
+    saveStats();
+    updateHeaderStats();
+
+    const res = document.getElementById('builder-result');
+    res.style.display = "block";
+
+    let badge = "";
+    if (score === 100) badge = '<span class="badge">🏆 Будущий редактор журнала</span>';
+    else if (score >= 80) badge = '<span class="badge">🧹 Чистильщик кликбейта</span>';
+    else if (score >= 50) badge = '<span class="badge">✏️ Начинающий редактор</span>';
+    else badge = '<span class="badge" style="background:#64748b;">📚 Новичок</span>';
+
+    res.innerHTML =
+      `${badge}<br><b>Ты набрал ${score}%</b> научности в этом посте. ` +
+      `Правильно выбрано фраз: ${goodSelected} из ${goodTotal}. ` +
+      (badSelected > 0 ? `Лишних кликбейт-фраз: ${badSelected}.` : "Ты не добавил лишнего — отлично!");
+  }
+
+  function nextBuilder() {
+    currentBuilderIndex++;
+    loadBuilderPost();
+  }
+
+  // --- ИНИЦИАЛИЗАЦИЯ ---
+  loadStats();
+</script>
+
+</body>
+</html>
