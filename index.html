@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Научный News TG — Модератор</title>
+  <title>Научный Научный дозор — Модератор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
@@ -148,7 +148,7 @@
   <div id="screen-menu" class="screen active">
     <header>
       <div>
-        <h1>🔬 Научный News TG</h1>
+        <h1>🔬 Научный Научный дозор</h1>
         <div class="tagline">Ты — модератор канала. Отбирай настоящие научные новости.</div>
       </div>
       <small>Разработчик:<br>Зверев Григорий<br>10 л</small>
@@ -167,9 +167,9 @@
     </div>
 
     <div class="card">
-      <h2>💰 Твой кошелёк</h2>
+      <h2>💰 Твой Научный дозорМонетпрофиль</h2>
       <div class="top-bar">
-        <div class="top-pill">Коины: <b id="coins">0</b></div>
+        <div class="top-pill">Научный дозорМонеты: <b id="coins">0</b></div>
         <div class="top-pill">Ранг: <b id="rank">Новичок</b></div>
       </div>
       <div class="stats-row">
@@ -207,7 +207,7 @@
       <div class="top-bar">
         <span class="top-pill">Режим модератора</span>
         <span class="top-pill">Новость: <span id="round-num">1</span>/10</span>
-        <span class="top-pill">Коины: <b id="coins-top">0</b></span>
+        <span class="top-pill">Научный дозорМонеты: <b id="coins-top">0</b></span>
       </div>
       <p style="font-size:13px;color:#9ca3af;margin-top:2px;">
         Выбирай тип новости и решай: заблокировать её или оставить подписчикам.
@@ -264,7 +264,7 @@
       <h2 style="margin:0 0 6px 0;font-size:17px;">✅ Раунд завершён</h2>
       <p id="summary-text" style="font-size:14px;margin:4px 0;"></p>
       <p style="font-size:12px;color:#9ca3af;margin:4px 0 10px 0;">
-        Коины уже добавлены в твой кошелёк.
+        Научный дозорМонеты уже добавлены в твой Научный дозорМонетпрофиль.
       </p>
       <button class="btn btn-primary btn-full" onclick="closeSummary()">Понятно</button>
     </div>
@@ -549,7 +549,7 @@
       state.blockedCorrect++;
       stateRoundCorrectBlock++;
       coinsEarned = 10;
-      msg = news.explanationGood + " (+10 коинов)";
+      msg = news.explanationGood + " (+10 Научный дозорМонетов)";
     } else if (news.truth === "scientific" && action === "block") {
       state.blockedWrong++;
       stateRoundWrongBlock++;
@@ -557,13 +557,13 @@
       msg = news.explanationBad;
     } else if (news.truth === "scientific" && action === "leave") {
       coinsEarned = 8;
-      msg = news.explanationGood + " (+8 коинов)";
+      msg = news.explanationGood + " (+8 Научный дозорМонетов)";
     } else if (news.truth === "fake" && action === "leave") {
       coinsEarned = 0;
       msg = news.explanationBad;
     } else if (news.truth === "uncertain") {
       coinsEarned = 6;
-      msg = "🤔 Осторожная работа со спорными новостями. (+6 коинов) " + news.explanationGood;
+      msg = "🤔 Осторожная работа со спорными новостями. (+6 Научный дозорМонетов) " + news.explanationGood;
     }
 
     state.coins += coinsEarned;
@@ -594,7 +594,7 @@
         `Правильно заблокировал фейков: ${stateRoundCorrectBlock}\n` +
         `Ошибочно убрал научных новостей: ${stateRoundWrongBlock}\n` +
         `Точность модерации в этом раунде: ${roundAcc}%\n\n` +
-        `За раунд получил коины и поднялся в рейтинге!`;
+        `За раунд получил Научный дозорМонеты и поднялся в рейтинге!`;
 
       document.getElementById('summary-text').innerText = text;
       document.getElementById('modal-summary').style.display = "flex";
